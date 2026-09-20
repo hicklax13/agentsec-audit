@@ -16,12 +16,13 @@
             --panel-2: #16161a;
             --hairline: #232329;
             --hairline-2: #2e2e36;
-            --red: #ef3b3b;
-            --red-dim: #b32727;
-            --red-ghost: rgba(239, 59, 59, 0.28);
+            --red: #d62b2b;
+            --red-dim: #a81f1f;
+            --red-text: #ff6b6b;
+            --red-ghost: rgba(217,44,44,0.45);
             --white: #f5f5f2;
             --gray-1: #a3a3ad;
-            --gray-2: #6e6e78;
+            --gray-2: #9494a0;
             --seg-off: #1d1d23;
             --seg-red: #ff4545;
             --seg-green: #3ddc7a;
@@ -41,7 +42,7 @@
 
         ::selection { background: var(--red); color: #fff; }
         ::-webkit-scrollbar { width: 10px; background: var(--ink); }
-        ::-webkit-scrollbar-thumb { background: var(--hairline-2); border: 2px solid var(--ink); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--hairline-2); border: 2px solid var(--ink); border-radius: var(--radius); }
         ::-webkit-scrollbar-thumb:hover { background: var(--gray-2); }
 
         body {
@@ -57,8 +58,7 @@
             content: "";
             position: fixed;
             inset: 0;
-            background: repeating-linear-gradient(to right, transparent 0 calc(100%/6 - 1px), var(--hairline) calc(100%/6 - 1px) calc(100%/6));
-            opacity: 0.35;
+            background: radial-gradient(ellipse 80% 50% at 20% -10%, var(--red-wash), transparent 70%);
             pointer-events: none;
             z-index: 0;
         }
@@ -113,7 +113,7 @@
 
         .btn:active { transform: translateY(1px); }
 
-        .btn-red { background: var(--red); color: #fff; border: 1px solid var(--red); box-shadow: 0 6px 22px rgba(239,59,59,0.25); }
+        .btn-red { background: var(--red); color: #fff; border: 1px solid var(--red); box-shadow: 0 6px 14px rgba(0,0,0,0.42); }
         .btn-red:hover { background: var(--red-dim); border-color: var(--red-dim); }
 
         .btn-ghost { background: transparent; color: var(--white); border: 1px solid var(--hairline-2); }
@@ -133,10 +133,10 @@
         .kicker-row {
             display: flex; align-items: center; gap: 10px;
             font-family: var(--mono); font-size: 0.78rem; color: var(--gray-2);
-            margin-bottom: 22px; letter-spacing: 0.06em;
+            margin-bottom: 22px;
         }
 
-        .kicker-row .tick { color: var(--red); font-weight: 700; }
+        .kicker-row .tick { color: var(--red-text); font-weight: 700; }
 
         h1.display {
             font-family: var(--cond);
@@ -148,7 +148,7 @@
             margin-bottom: 20px;
         }
 
-        h1.display .hl { color: var(--red); }
+        h1.display .hl { color: var(--red-text); }
 
         .hero-sub { font-size: 1.08rem; color: var(--gray-1); max-width: 52ch; margin-bottom: 32px; }
 
@@ -162,7 +162,7 @@
         .seg-digit { display: inline-block; width: 30px; height: 52px; position: relative; }
 
         .seg {
-            position: absolute; background: var(--seg-off); border-radius: 2px;
+            position: absolute; background: var(--seg-off); border-radius: var(--radius);
             transition: background .3s ease;
         }
 
@@ -174,8 +174,8 @@
         .seg-f { top: 4px; left: 0; width: 5px; height: 20px; }
         .seg-g { top: 23px; left: 4px; right: 4px; height: 5px; }
 
-        .on-r { background: var(--seg-red); box-shadow: 0 0 9px rgba(255,69,69,0.5); }
-        .on-g { background: var(--seg-green); box-shadow: 0 0 9px rgba(61,220,122,0.4); }
+        .on-r { background: var(--seg-red); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22); }
+        .on-g { background: var(--seg-green); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18); }
 
         /* ============ TERMINAL ============ */
         .terminal {
@@ -183,11 +183,12 @@
             border: 1px solid var(--hairline);
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 30px 70px rgba(0,0,0,0.65);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.42);
         }
 
         .term-bar {
-            height: 38px;
+            padding: 10px 16px;
+            height: 48px;
             background: var(--panel);
             border-bottom: 1px solid var(--hairline);
             display: flex; align-items: center; justify-content: space-between;
@@ -197,8 +198,8 @@
         .term-dots { display: flex; gap: 7px; }
         .term-dots span { width: 11px; height: 11px; border-radius: 50%; }
         .td1 { background: var(--red); }
-        .td2 { background: #3c3c46; }
-        .td3 { background: #3c3c46; }
+        .td2 { background: var(--hairline-strong); }
+        .td3 { background: var(--hairline-strong); }
 
         .term-title { font-family: var(--mono); font-size: 0.74rem; color: var(--gray-2); }
 
@@ -211,13 +212,13 @@
         }
 
         .ln { display: block; white-space: pre; }
-        .ln .p { color: var(--red); font-weight: 700; }
+        .ln .p { color: var(--red-text); }
         .ln .c { color: var(--white); font-weight: 600; }
         .ln .a { color: var(--gray-1); }
         .ln .mut { color: var(--gray-2); }
         .ln .fail { color: var(--seg-red); font-weight: 700; }
         .ln .pass { color: var(--seg-green); font-weight: 700; }
-        .ln .vuln { color: #ff8f8f; }
+        .ln .vuln { color: #ffa0a0; }
 
         .cursor {
             display: inline-block; width: 8px; height: 15px;
@@ -249,16 +250,17 @@
         }
 
         .rail-cell {
-            padding: 18px 0 16px;
+            padding: 18px 10px 16px;
             border-right: 1px solid var(--hairline);
             text-align: center;
             position: relative;
+            border-radius: var(--radius);
         }
 
         .rail-cell:last-child { border-right: none; }
 
         .rail-code { font-family: var(--mono); font-size: 0.8rem; color: var(--white); font-weight: 600; }
-        .rail-name { font-family: var(--mono); font-size: 0.62rem; color: var(--gray-2); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 5px; }
+        .rail-name { font-family: var(--mono); font-size: 11px; color: var(--gray-2); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 5px; }
 
         .rail-cell.hit::after {
             content: "";
@@ -276,7 +278,7 @@
             font-weight: 800; text-transform: uppercase; letter-spacing: -0.01em; line-height: 1.08;
         }
 
-        h2.sec .hl { color: var(--red); }
+        h2.sec .hl { color: var(--red-text); }
 
         .sec-sub { color: var(--gray-1); margin-top: 10px; max-width: 58ch; font-size: 1rem; }
 
@@ -297,12 +299,12 @@
 
         .pin-mark {
             width: 26px; height: 26px; border: 1px solid var(--hairline-2);
-            display: grid; place-items: center; border-radius: 3px;
+            display: grid; place-items: center; border-radius: var(--radius);
         }
 
         .pin-mark svg { width: 13px; height: 13px; }
         .pin-x { color: var(--seg-red); }
-        .pin-warn { color: #eab308; }
+        .pin-warn { color: #e5b93c; }
 
         .led-code { font-family: var(--mono); font-size: 0.8rem; color: var(--white); font-weight: 600; }
 
@@ -310,15 +312,15 @@
         .led-body p { font-size: 0.88rem; color: var(--gray-1); }
 
         .led-fix { font-family: var(--mono); font-size: 0.76rem; color: var(--gray-2); }
-        .led-fix b { color: var(--red); font-weight: 600; }
+        .led-fix b { color: var(--red-text); font-weight: 600; }
 
         /* ============ COMPARISON ============ */
         .compare { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; margin-bottom: 96px; }
 
-        .compare-col { background: var(--panel); padding: 34px 30px; }
+        .compare-col { background: var(--panel); padding: 40px 36px; }
         .compare-col.us { background: #18181d; }
 
-        .compare-col h4 { font-family: var(--cond); font-size: 1.15rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 20px; }
+        .compare-col h3 { font-family: var(--cond); font-size: 1.35rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 20px; }
         .compare-col.dim h4 { color: var(--gray-2); }
         .compare-col.us h4 { color: var(--red); }
 
@@ -331,6 +333,7 @@
         .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-bottom: 100px; }
 
         .tier {
+            padding: 38px 34px;
             background: var(--panel);
             border: 1px solid var(--hairline);
             border-radius: 8px;
@@ -339,14 +342,14 @@
             position: relative;
         }
 
-        .tier.hot { border-color: var(--red-ghost); background: linear-gradient(180deg, rgba(239,59,59,0.05), var(--panel) 55%); }
+        .tier.hot { border-color: var(--red-ghost); background: linear-gradient(180deg, rgba(217,44,44,0.07), var(--panel) 55%); }
 
         .hot-flag {
             position: absolute; top: -13px; left: 30px;
-            background: var(--red); color: #fff;
-            font-family: var(--mono); font-size: 0.66rem; font-weight: 700;
+            background: var(--red); color: var(--white);
+            font-family: var(--mono); font-size: 11px; font-weight: 700;
             letter-spacing: 0.14em; text-transform: uppercase;
-            padding: 4px 12px; border-radius: 3px;
+            padding: 4px 12px; border-radius: var(--radius);
         }
 
         .tier-name { font-family: var(--cond); font-size: 1.25rem; font-weight: 700; text-transform: uppercase; }
@@ -365,11 +368,11 @@
         /* ============ FINAL CTA ============ */
         .final {
             border: 1px solid var(--hairline);
-            border-radius: 10px;
+            border-radius: var(--radius);
             padding: 60px 56px;
             text-align: center;
             background:
-                radial-gradient(ellipse at 50% 120%, rgba(239,59,59,0.14), transparent 60%),
+                radial-gradient(ellipse at 50% 120%, rgba(217,44,44,0.20), transparent 60%),
                 var(--panel);
             margin-bottom: 90px;
         }
@@ -549,7 +552,7 @@
 
         <div class="compare">
             <div class="compare-col dim">
-                <h4>Code Linters (Snyk)</h4>
+                <h3>Code Linters (Snyk)</h3>
                 <ul class="cmp-list">
                     <li><span class="dash">&#8210;</span> Static syntax in Python / JS files</li>
                     <li><span class="dash">&#8210;</span> Cannot read prompt instructions</li>
@@ -558,7 +561,7 @@
                 </ul>
             </div>
             <div class="compare-col dim">
-                <h4>Prompt Guardrails</h4>
+                <h3>Prompt Guardrails</h3>
                 <ul class="cmp-list">
                     <li><span class="dash">&#8210;</span> Single-turn conversational filter</li>
                     <li><span class="dash">&#8210;</span> Never sees tool schemas</li>
@@ -567,7 +570,7 @@
                 </ul>
             </div>
             <div class="compare-col us">
-                <h4>AgentSec Audit</h4>
+                <h3>AgentSec Audit</h3>
                 <ul class="cmp-list">
                     <li><span class="tickr">&#10003;</span> Lints prompts, tools, and MCP together</li>
                     <li><span class="tickr">&#10003;</span> GitHub Action gate on every PR</li>
