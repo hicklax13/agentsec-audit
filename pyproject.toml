@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentsec-audit"
+version = "1.0.0"
+authors = [
+  { name="Connor Hickey", email="connorbhickey@hotmail.com" },
+]
+description = "Automated security linter and compliance auditor for autonomous AI agents (OWASP ASI-10)"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+]
+dependencies = [
+    "pydantic>=2.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0"
+]
+
+[project.scripts]
+agentsec = "agentsec.cli:main"
