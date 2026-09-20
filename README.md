@@ -1,37 +1,48 @@
 # AgentSec Audit
 
-> Automated security scanning, policy linting, and compliance certification for autonomous AI agents, tool configurations, and Model Context Protocol (MCP) servers.
+> The security gate for autonomous AI agents. Lints system prompts, tool schemas, and MCP server manifests against the **OWASP Top 10 for Agentic Applications (2026 ASI01–ASI10)**, auto-remediates violations, and issues compliance PDFs.
 
-Built for the **OWASP Top 10 for Agentic Applications (2026 ASI01–ASI10)** and **ISO 42001 / SOC 2 Type II** processing integrity audits.
+![demo](https://raw.githubusercontent.com/hicklax13/agentsec-audit/master/public/demo.gif)
 
 ---
 
-## Features
-- **Deterministic Static AST & Schema Linter:** Scans system prompts, function calling schemas, and MCP tool declarations.
-- **OWASP ASI-10 Rule Enforcement:** Detects arbitrary shell/eval execution, goal hijacking vectors, unbounded delegation depth, and unsanitized memory write loops.
-- **Native MCP Interface:** Exposes `audit_agent_config` over stdio JSON-RPC so Hermes Desktop, Claude Code, and Codex can audit agents natively.
-- **Turnkey CI/CD:** Ready for GitHub Actions with automated PR pass/fail gating.
+## What it catches (real findings from the shipped engine)
+
+| Code | Finding | One-command fix |
+|------|---------|-----------------|
+| ASI01 | Prompt injection with no instruction boundary | `agentsec fix` injects `<user_data>` isolation |
+| ASI02 | Destructive ops without human confirmation | two-phase confirmation gate |
+| ASI03 | Plaintext credentials hardcoded in MCP env blocks | vault reference `${TOKEN}` |
+| ASI05 | Arbitrary shell execution exposed to the agent | sandboxed microVM + HITL gate |
+| ASI06 | Unbounded recursive agent delegation | max_depth + turn budget |
+| ASI07 | Unencrypted HTTP transport for remote MCP | upgrade to HTTPS |
+
+Traditional code linters (Snyk) and prompt guardrails (LlamaGuard) both stop short of the agent execution loop. That gap is this tool.
 
 ---
 
 ## Quickstart
 
-### Installation
 ```bash
 git clone https://github.com/hicklax13/agentsec-audit.git
 cd agentsec-audit
-pip install -r requirements.txt
-```
+pip install -e .
 
-### Run a Local Security Audit
-```bash
-python -m src.cli scan ./sample_agent.json --format html --out report.html
-```
+# audit an agent config
+agentsec scan ./sample_agent.json
 
----
+# automatically remediate violations
+agentsec fix ./sample_agent.json
+
+# re-scan: 100/100 PASSED
+agentsec scan ./sample_agent.json
+
+# generate signed compliance PDF evidence
+agentsec scan ./sample_agent.json --format pdf --out audit.pdf
+```
 
 ## GitHub Action Integration
-Add this to your repository workflow:
+
 ```yaml
 name: AgentSec Compliance Check
 on: [push, pull_request]
@@ -46,3 +57,25 @@ jobs:
           config-path: "agent.json"
           fail-on-violation: "true"
 ```
+
+## MCP-Native
+
+Runs as a Model Context Protocol server, so agents in Hermes Desktop, Claude Code, and Codex can audit their own configs before commit:
+
+```bash
+python -m agentsec.mcp_server
+```
+
+Exposes `audit_agent_config` over stdio JSON-RPC.
+
+## Pricing
+
+- **Developer:** free forever (this repo)
+- **Team CI/CD:** $49/mo — PR gating + auto-fix patches
+- **Compliance Pro:** $249/mo — signed SOC 2 / ISO 42001 PDF packs
+
+## Disclaimer
+
+Audit reports are heuristic, point-in-time automated assessments. They are not a legal guarantee or a defense against zero-day exploits. Provided AS IS.
+
+MIT licensed.
