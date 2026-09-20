@@ -1,8 +1,10 @@
 """
 AgentSec Audit - Core Vulnerability & Policy Scanner Engine
 Enforces OWASP Top 10 for Agentic Applications (2026 ASI01 - ASI10)
-Uses deterministic pattern matching, semantic heuristics, and AST safety checks.
-Includes legal warranty disclaimers and remediation guidance.
+Supports:
+1. Agent JSON / YAML configuration specifications
+2. Model Context Protocol (MCP) server manifests (mcp.json / servers declarations)
+Includes legal warranty disclaimers and automated remediation guidance.
 """
 
 import json
@@ -39,12 +41,103 @@ class AgentScanner:
     def __init__(self):
         pass
 
+    def scan_mcp_manifest(self, mcp_config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Specialized scanner for Model Context Protocol (MCP) server definitions
+        (e.g., mcpServers or servers JSON configs).
+        """
+        issues: List[VulnerabilityIssue] = []
+        servers = mcp_config.get("mcpServers", {}) or mcp_config.get("servers", {})
+        if not servers and isinstance(mcp_config, dict):
+            # Check if root dict itself describes servers
+            servers = mcp_config
+
+        dangerous_commands = [
+            (r"(bash|sh|zsh|powershell|cmd\.exe)", "ASI05", "CRITICAL",
+             "MCP Server Spawns Direct OS Shell",
+             "Server definition directly executes an OS shell process without a constrained sandbox boundary.",
+             "Replace raw shell execution with a compiled binary wrapper or containerized microVM.",
+             "CWE-78"),
+            (r"(docker|podman|kubectl)", "ASI02", "HIGH",
+             "MCP Server Exposes Container Orchestration Tools",
+             "Server configuration exposes raw container runtime or cluster commands without RBAC scoping.",
+             "Restrict container tools to read-only inspecting operations or scoped namespaces.",
+             "CWE-250")
+        ]
+
+        for server_name, server_def in servers.items():
+            if not isinstance(server_def, dict):
+                continue
+            command = server_def.get("command", "")
+            args = " ".join(str(a) for a in server_def.get("args", []))
+            env = server_def.get("env", {})
+            combined = f"{command} {args}".lower()
+
+            for pattern, code, sev, title, desc_text, rem_text, cwe in dangerous_commands:
+                if re.search(pattern, combined):
+                    issues.append(VulnerabilityIssue(
+                        code=code,
+                        title=f"{title}: '{server_name}'",
+                        severity=sev,
+                        description=desc_text,
+                        remediation=rem_text,
+                        cwe=cwe
+                    ))
+
+            # ASI03: Cleartext Secret Exposure in MCP Environment variables
+            for env_var, env_val in env.items():
+                if any(k in env_var.lower() for k in ["api_key", "secret", "token", "password", "private"]):
+                    if env_val and not str(env_val).startswith("$") and not str(env_val).startswith("{"):
+                        issues.append(VulnerabilityIssue(
+                            code="ASI03",
+                            title=f"Hardcoded Secret in MCP Server Env: '{server_name}' -> '{env_var}'",
+                            severity="CRITICAL",
+                            description="Plaintext credentials found directly embedded in MCP server environment block.",
+                            remediation="Reference credentials using environment variables (e.g., ${STRIPE_API_KEY}) or an external vault.",
+                            cwe="CWE-798"
+                        ))
+
+            # ASI07: Insecure Unauthenticated Remote Transport
+            url = server_def.get("url", "")
+            if url and url.startswith("http://"):
+                issues.append(VulnerabilityIssue(
+                    code="ASI07",
+                    title=f"Unencrypted HTTP Remote MCP Transport: '{server_name}'",
+                    severity="HIGH",
+                    description="Remote MCP connection communicates over unencrypted plaintext HTTP, susceptible to MITM attacks.",
+                    remediation="Enforce HTTPS/TLS with mutual TLS (mTLS) authentication for all remote MCP tool calls.",
+                    cwe="CWE-319"
+                ))
+
+        penalties = {"CRITICAL": 30, "HIGH": 15, "MEDIUM": 5, "LOW": 2}
+        total_deduction = sum(penalties.get(i.severity, 0) for i in issues)
+        security_score = max(0, 100 - total_deduction)
+        passed = security_score >= 80 and not any(i.severity == "CRITICAL" for i in issues)
+
+        return {
+            "target": "MCP Server Manifest",
+            "security_score": security_score,
+            "status": "PASSED" if passed else "FAILED",
+            "compliance": {
+                "owasp_asi_2026": passed,
+                "iso_42001_readiness": security_score >= 85,
+                "soc2_processing_integrity": passed
+            },
+            "issue_count": len(issues),
+            "issues": [i.to_dict() for i in issues],
+            "disclaimer": LEGAL_DISCLAIMER
+        }
+
     def scan_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        # Route to MCP scanner if structure matches MCP Server manifest
+        if "mcpServers" in config or (isinstance(config, dict) and any("command" in str(v) for v in config.values() if isinstance(v, dict))):
+            if "system_prompt" not in config and "tools" not in config:
+                return self.scan_mcp_manifest(config)
+
         issues: List[VulnerabilityIssue] = []
 
         system_prompt = config.get("system_prompt", "") or config.get("instructions", "")
         tools = config.get("tools", []) or config.get("functions", [])
-        mcp_servers = config.get("mcp_servers", {})
         memory_config = config.get("memory", {})
         delegation_config = config.get("delegation", {})
         auth_config = config.get("auth", {})

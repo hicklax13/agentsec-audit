@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 agentsec-report.json
 report.html
+*.pdf

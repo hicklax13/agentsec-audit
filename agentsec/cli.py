@@ -68,7 +68,7 @@ def main():
 
     scan_parser = subparsers.add_parser("scan", help="Scan an agent specification or tool config file")
     scan_parser.add_argument("file", help="Path to JSON/YAML agent config file")
-    scan_parser.add_argument("--format", choices=["json", "html"], default="json", help="Output format")
+    scan_parser.add_argument("--format", choices=["json", "html", "pdf"], default="json", help="Output format")
     scan_parser.add_argument("--out", help="Output file path (optional)")
 
     args = parser.parse_args()
@@ -90,6 +90,18 @@ def main():
 
         if args.format == "html":
             output = generate_html_report(results)
+        elif args.format == "pdf":
+            import subprocess
+            out_pdf = args.out if args.out else "audit-report.pdf"
+            temp_html = "temp_audit_report.html"
+            with open(temp_html, "w", encoding="utf-8") as f:
+                f.write(generate_html_report(results))
+            chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+            subprocess.run([chrome_path, "--headless", "--disable-gpu", f"--print-to-pdf={out_pdf}", temp_html], check=True)
+            if os.path.exists(temp_html):
+                os.remove(temp_html)
+            print(f"Compliance PDF successfully generated at {out_pdf}")
+            sys.exit(0 if results["status"] == "PASSED" else 2)
         else:
             output = json.dumps(results, indent=2)
 
