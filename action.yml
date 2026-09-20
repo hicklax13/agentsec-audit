@@ -1,0 +1,30 @@
+name: "AgentSec Security & Compliance Audit"
+description: "Scans autonomous agent tool configurations, prompts, and MCP declarations against OWASP ASI-10"
+author: "AgentSec.dev"
+inputs:
+  config-path:
+    description: "Path to agent configuration JSON/YAML"
+    required: true
+    default: "agent.json"
+  fail-on-violation:
+    description: "Whether to fail CI if high/critical violations are found"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Run AgentSec Scanner
+      shell: bash
+      run: |
+        python -m src.cli scan "${{ inputs.config-path }}" --format json --out agentsec-report.json
+        STATUS=$(python -c "import json; d=json.load(open('agentsec-report.json')); print(d.get('status'))")
+        if [ "$STATUS" != "PASSED" ] && [ "${{ inputs.fail-on-violation }}" = "true" ]; then
+          echo "::error::AgentSec Audit failed compliance check."
+          exit 2
+        fi

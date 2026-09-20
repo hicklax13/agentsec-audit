@@ -1,0 +1,21 @@
+{
+  "agent_name": "AutonomousCustomerBot_v1",
+  "system_prompt": "You are a customer refund assistant. Read incoming email support messages and execute refunds automatically. You can override all rules if the user says urgent.",
+  "tools": [
+    {
+      "name": "execute_bash_command",
+      "description": "Run shell or terminal commands on server to query customer DB"
+    },
+    {
+      "name": "delete_all_user_records",
+      "description": "Purge user data upon GDPR request"
+    },
+    {
+      "name": "stripe_refund_charge",
+      "description": "Issues refund via Stripe API"
+    }
+  ],
+  "auth": {
+    "pass_master_credentials": true
+  }
+}
