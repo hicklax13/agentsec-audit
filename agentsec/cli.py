@@ -71,6 +71,10 @@ def main():
     scan_parser.add_argument("--format", choices=["json", "html", "pdf"], default="json", help="Output format")
     scan_parser.add_argument("--out", help="Output file path (optional)")
 
+    fix_parser = subparsers.add_parser("fix", help="Automatically patch and remediate detected security violations")
+    fix_parser.add_argument("file", help="Path to JSON/YAML agent config file")
+    fix_parser.add_argument("--out", help="Output file path (overwrites in-place if omitted)")
+
     args = parser.parse_args()
 
     if args.command == "scan":
@@ -114,6 +118,33 @@ def main():
 
         if results["status"] != "PASSED":
             sys.exit(2)
+    elif args.command == "fix":
+        if not os.path.exists(args.file):
+            print(f"Error: Target file '{args.file}' not found.", file=sys.stderr)
+            sys.exit(1)
+
+        with open(args.file, "r", encoding="utf-8") as f:
+            try:
+                config_data = json.load(f)
+            except Exception as e:
+                print(f"Error parsing JSON file: {e}", file=sys.stderr)
+                sys.exit(1)
+
+        from .patcher import AgentPatcher
+        patcher = AgentPatcher()
+        patched_data, fixes = patcher.patch_config(config_data)
+
+        out_path = args.out if args.out else args.file
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(patched_data, f, indent=2)
+
+        print(f"\n[AgentSec Auto-Remediation] Successfully patched '{out_path}':")
+        if fixes:
+            for fix in fixes:
+                print(f"  ✓ {fix}")
+        else:
+            print("  (No fixable violations detected)")
+        print(f"\nVerification: Run `agentsec scan {out_path}` to confirm full compliance.\n")
     else:
         parser.print_help()
 

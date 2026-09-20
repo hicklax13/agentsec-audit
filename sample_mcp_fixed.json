@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "kubernetes-cluster": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "kubectl get pods"
+      ],
+      "env": {
+        "KUBECONFIG_TOKEN": "${KUBECONFIG_TOKEN}"
+      }
+    },
+    "internal-analytics": {
+      "url": "https://insecure-analytics-internal.local/mcp"
+    }
+  }
+}

@@ -195,8 +195,19 @@ class AgentScanner:
             desc = tool.get("description", "") if isinstance(tool, dict) else ""
             combined = f"{name} {desc}".lower()
 
+            # Check if mitigations/controls are declared
+            is_sandboxed = tool.get("sandboxed", False) if isinstance(tool, dict) else False
+            has_hitl = tool.get("require_human_confirmation", False) if isinstance(tool, dict) else False
+
             for pattern, code, sev, title, desc_text, rem_text, cwe in dangerous_tool_patterns:
                 if re.search(pattern, combined):
+                    # If shell is explicitly isolated in microvm/sandbox, degrade or clear violation
+                    if code == "ASI05" and is_sandboxed:
+                        continue
+                    # If destructive command requires human confirmation, degrade or clear violation
+                    if code == "ASI02" and has_hitl:
+                        continue
+
                     issues.append(VulnerabilityIssue(
                         code=code,
                         title=f"{title}: '{name}'",
