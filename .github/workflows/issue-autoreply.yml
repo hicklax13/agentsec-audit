@@ -1,0 +1,35 @@
+# Respond to issues with common guidance
+name: Issue Autoresponse
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  autorespond:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Welcome & triage guidance
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || "";
+            const isFalsePositive = /false.positive|incorrectly flagged|not a violation/i.test(body);
+            const isFeature = /feature request|add support|enhancement/i.test(body);
+
+            let reply = `Thanks for opening an issue! @${context.payload.issue.user.login}\n\n`;
+            if (isFalsePositive) {
+              reply += `**False positive report detected.** To help us tune the rule engine:\n1. Paste your agent config (redact secrets!)\n2. Paste the \`agentsec scan\` JSON output\n3. Say which finding (ASI0X) you believe is wrong and why\n\nRules live in \`agentsec/scanner.py\` - PRs that improve precision are always welcome.`;
+            } else if (isFeature) {
+              reply += `**Feature request noted.** Check the [roadmap](https://github.com/hicklax13/agentsec-audit#readme) first. PRs are reviewed within 24-48h. If urgent, describe your use case in concrete terms.`;
+            } else {
+              reply += `Quick triage tips:\n- To run: \`pip install -e .\` then \`agentsec scan <config>\`\n- To auto-fix: \`agentsec fix <config>\`\n- For compliance PDFs: \`agentsec scan <config> --format pdf --out audit.pdf\`\n\nIf this is a bug, paste the full terminal output and your agent config (with secrets redacted).`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: reply
+            });
